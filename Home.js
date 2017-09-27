@@ -66,6 +66,40 @@ var valsArray = [];
         });
     }
 
+    function loadCtxSuspend() {
+        var i = 0;
+        var start = Date.now();
+        return Excel.run(function (ctx) {
+            var sheet = ctx.workbook.worksheets.getActiveWorksheet();
+            iter = valsArray[i].length;
+            var rangeString = "A" + (iter * i + 1).toString() + ":GZ" + ((i + 1) * iter).toString();
+            console.log(rangeString);
+
+            var range = sheet.getRange(rangeString);
+            
+            range.values = valsArray[i];
+            console.log(i + " started sync at " + Date.now());
+            return ctx.sync(ctx);
+        }).then(function(ctx) {
+            ctx.application.suspendCalculationUntilNextSync();
+            console.log(i + " ended sync at " + (Date.now() - start));
+            start = Date.now();
+            ++i;
+            var sheet = ctx.workbook.worksheets.getActiveWorksheet();
+            iter = valsArray[i].length;
+            var rangeString = "A" + (iter * i + 1).toString() + ":GZ" + ((i + 1) * iter).toString();
+            console.log(rangeString);
+
+            var range = sheet.getRange(rangeString);
+            
+            range.values = valsArray[i];
+            console.log(i + " started sync at " + Date.now());
+            return ctx.sync(ctx);
+        }).catch(function (e) {
+            console.log(e);
+        })
+    }
+
     function loadChainedThensOnRun() {
         var i = 0;
         var start = Date.now();
@@ -220,7 +254,7 @@ var valsArray = [];
             range.values = valsArray[i];
             console.log(i + " started sync at " + Date.now());
             return ctx.sync(ctx);
-        })
+        });
     }
 
     function loadChainedThensOnCtx() {
@@ -391,5 +425,7 @@ var valsArray = [];
                 })
             })(i);
         }
+
+        promise.then(console.log("done"));
     }
 })();
